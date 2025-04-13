@@ -53,6 +53,9 @@
 				]
 			}
 		],
+		"folder": {
+			"name": "testing_etl_historico"
+		},
 		"annotations": []
 	}
 }
