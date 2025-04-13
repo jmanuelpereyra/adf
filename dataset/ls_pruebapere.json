@@ -1,0 +1,75 @@
+{
+	"name": "ls_pruebapere",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_pruebapere",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "CHROM",
+				"type": "varchar"
+			},
+			{
+				"name": "POS",
+				"type": "varchar"
+			},
+			{
+				"name": "ID",
+				"type": "varchar"
+			},
+			{
+				"name": "REF",
+				"type": "varchar"
+			},
+			{
+				"name": "ALT",
+				"type": "varchar"
+			},
+			{
+				"name": "QUAL",
+				"type": "varchar"
+			},
+			{
+				"name": "FILTER",
+				"type": "varchar"
+			},
+			{
+				"name": "INFO",
+				"type": "varchar"
+			},
+			{
+				"name": "FORMAT",
+				"type": "varchar"
+			},
+			{
+				"name": "MUESTRA",
+				"type": "varchar"
+			},
+			{
+				"name": "VALOR",
+				"type": "varchar"
+			},
+			{
+				"name": "ORIGEN",
+				"type": "varchar"
+			},
+			{
+				"name": "FECHA_COPIA",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "RESULTADO",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Unificado"
+		}
+	}
+}
