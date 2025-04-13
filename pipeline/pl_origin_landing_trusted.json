@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Notebook1",
+				"name": "origin_landing",
 				"type": "DatabricksNotebook",
 				"dependsOn": [],
 				"policy": {
@@ -13,7 +13,14 @@
 					"secureOutput": false,
 					"secureInput": false
 				},
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/testing_etl/1. origin_to_landing"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_databricks_origin_landing",
+					"type": "LinkedServiceReference"
+				}
 			},
 			{
 				"name": "Notebook2",
