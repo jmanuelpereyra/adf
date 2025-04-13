@@ -1,0 +1,29 @@
+{
+	"name": "tg_origin_landing_trusted_wk",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_origin_landing_trusted",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2025-04-13T20:55:00",
+				"timeZone": "E. South America Standard Time",
+				"schedule": {
+					"weekDays": [
+						"Sunday"
+					]
+				}
+			}
+		}
+	}
+}
