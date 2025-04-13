@@ -9,7 +9,10 @@
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobFSLocation"
+				"type": "AzureBlobFSLocation",
+				"fileName": "testing_historico",
+				"folderPath": "testing_etl",
+				"fileSystem": "landing"
 			},
 			"compressionCodec": "snappy"
 		},
