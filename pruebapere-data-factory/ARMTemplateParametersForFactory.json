@@ -11,6 +11,9 @@
 		"ls_pruebapere_password": {
 			"value": ""
 		},
+		"ls_databricks_origin_landing_accessToken": {
+			"value": ""
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"value": "https://pereyrastorage.dfs.core.windows.net/"
 		},

@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_pruebapere'"
 		},
+		"ls_databricks_origin_landing_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'ls_databricks_origin_landing'"
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://pereyrastorage.dfs.core.windows.net/"
@@ -71,6 +75,31 @@
 						"type": "SecureString",
 						"value": "[parameters('ls_pruebapere_password')]"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_databricks_origin_landing')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-3234966484911001.1.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('ls_databricks_origin_landing_accessToken')]"
+					},
+					"newClusterNodeType": "Standard_DS4_v2",
+					"newClusterNumOfWorker": "1:4",
+					"newClusterSparkEnvVars": {
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+					},
+					"newClusterVersion": "14.3.x-scala2.12",
+					"clusterOption": "Autoscaling",
+					"newClusterInitScripts": []
 				}
 			},
 			"dependsOn": []
@@ -182,6 +211,188 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_origin_landing_trusted')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "origin_landing",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/testing_etl/1. origin_to_landing"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_databricks_origin_landing",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "landing_trusted_incremental",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "alerta_ejecucion_correcta_origin_landing",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/testing_etl/3. landing_to_trusted_incremental"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_databricks_origin_landing",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "alerta_ejecucion_correcta_origin_landing",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "origin_landing",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-31.brazilsouth.logic.azure.com:443/workflows/f20e6d50fee84116be0d97e75436449d/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=3UPTPGZ4TfwXsxx8NzY-nVrX-ziJw-ct5Ob-O4OkYRM",
+							"body": {
+								"value": "{\n\"title\" : \"PIPELINE EJECUTADO\",\n\"message\"  : \"PEPELINE EJECUTADO CON EXITO\",\n\"color\"  : \"GREEN\",\n\"dataFactoryName\"  : \"@{pipeline().DataFactory}\",\n\"pipelineName\"  : \"@{pipeline().Pipeline}\",\n\"pipelineRunId\"  : \"@{pipeline().RunId}\",\n\"time\"  : \"@{utcNow()}\"\n}",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "alerta_ejecucion_fallida_origin_landing",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "origin_landing",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-29.brazilsouth.logic.azure.com:443/workflows/c84db91e0c7c4edcafbc987654e1435d/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=7MwujorS0RpbRi96AbvX_8FvaAfdgmC11Q5SPTSoRc8",
+							"body": {
+								"value": "{\n\"title\" : \"PIPELINE EJECUTADO CON ERROR\",\n\"message\"  : \"@{activity('origin_landing').error.message}\",\n\"color\"  : \"RED\",\n\"dataFactoryName\"  : \"@{pipeline().DataFactory}\",\n\"pipelineName\"  : \"@{pipeline().Pipeline}\",\n\"pipelineRunId\"  : \"@{pipeline().RunId}\",\n\"time\"  : \"@{utcNow()}\"\n}",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "alerta_ejecucion_correcta_landing_trusted",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "landing_trusted_incremental",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-31.brazilsouth.logic.azure.com:443/workflows/f20e6d50fee84116be0d97e75436449d/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=3UPTPGZ4TfwXsxx8NzY-nVrX-ziJw-ct5Ob-O4OkYRM",
+							"body": {
+								"value": "{\n\"title\" : \"PIPELINE EJECUTADO\",\n\"message\"  : \"PEPELINE EJECUTADO CON EXITO\",\n\"color\"  : \"GREEN\",\n\"dataFactoryName\"  : \"@{pipeline().DataFactory}\",\n\"pipelineName\"  : \"@{pipeline().Pipeline}\",\n\"pipelineRunId\"  : \"@{pipeline().RunId}\",\n\"time\"  : \"@{utcNow()}\"\n}",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "alerta_ejecucion_fallida_landing_trusted",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "landing_trusted_incremental",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-29.brazilsouth.logic.azure.com:443/workflows/c84db91e0c7c4edcafbc987654e1435d/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=7MwujorS0RpbRi96AbvX_8FvaAfdgmC11Q5SPTSoRc8",
+							"body": {
+								"value": "{\n\"title\" : \"PIPELINE EJECUTADO CON ERROR\",\n\"message\"  : \"@{activity('landing_trusted_incremental').error.message}\",\n\"color\"  : \"RED\",\n\"dataFactoryName\"  : \"@{pipeline().DataFactory}\",\n\"pipelineName\"  : \"@{pipeline().Pipeline}\",\n\"pipelineRunId\"  : \"@{pipeline().RunId}\",\n\"time\"  : \"@{utcNow()}\"\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "proceso_completo_challenge"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_databricks_origin_landing')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_copy_testing')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -243,11 +454,49 @@
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
+				"folder": {
+					"name": "testing_etl_historico"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ls_pruebapere')]",
 				"[concat(variables('factoryId'), '/datasets/ds_testing_parquet_sink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tg_origin_landing_trusted_wk')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_origin_landing_trusted",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2025-04-13T20:55:00",
+						"timeZone": "E. South America Standard Time",
+						"schedule": {
+							"weekDays": [
+								"Sunday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_origin_landing_trusted')]"
 			]
 		}
 	]

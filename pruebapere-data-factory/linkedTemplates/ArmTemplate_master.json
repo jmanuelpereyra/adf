@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_pruebapere'"
 		},
+		"ls_databricks_origin_landing_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'ls_databricks_origin_landing'"
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://pereyrastorage.dfs.core.windows.net/"
@@ -63,6 +67,9 @@
 					},
 					"ls_pruebapere_password": {
 						"value": "[parameters('ls_pruebapere_password')]"
+					},
+					"ls_databricks_origin_landing_accessToken": {
+						"value": "[parameters('ls_databricks_origin_landing_accessToken')]"
 					},
 					"AzureDataLakeStorage1_properties_typeProperties_url": {
 						"value": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]"
