@@ -11,17 +11,21 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
 		},
-		"ls_pruebapere_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'ls_pruebapere'"
-		},
 		"ls_databricks_origin_landing_accessToken": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accessToken' of 'ls_databricks_origin_landing'"
 		},
+		"ls_pruebapere_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_pruebapere'"
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://pereyrastorage.dfs.core.windows.net/"
+		},
+		"ls_databricks_origin_landing_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0411-200207-y8rouebr"
 		},
 		"ls_pruebapere_properties_typeProperties_server": {
 			"type": "string",
@@ -58,6 +62,24 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ls_databricks_origin_landing')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-3234966484911001.1.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('ls_databricks_origin_landing_accessToken')]"
+					},
+					"existingClusterId": "[parameters('ls_databricks_origin_landing_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_pruebapere')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -78,137 +100,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_databricks_origin_landing')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureDatabricks",
-				"typeProperties": {
-					"domain": "https://adb-3234966484911001.1.azuredatabricks.net",
-					"accessToken": {
-						"type": "SecureString",
-						"value": "[parameters('ls_databricks_origin_landing_accessToken')]"
-					},
-					"newClusterNodeType": "Standard_DS4_v2",
-					"newClusterNumOfWorker": "1:4",
-					"newClusterSparkEnvVars": {
-						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-					},
-					"newClusterVersion": "14.3.x-scala2.12",
-					"clusterOption": "Autoscaling",
-					"newClusterInitScripts": []
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_testing_parquet_sink')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "testing_historico",
-						"folderPath": "testing_etl",
-						"fileSystem": "landing"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_pruebapere')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_pruebapere",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"schema": [
-					{
-						"name": "CHROM",
-						"type": "varchar"
-					},
-					{
-						"name": "POS",
-						"type": "varchar"
-					},
-					{
-						"name": "ID",
-						"type": "varchar"
-					},
-					{
-						"name": "REF",
-						"type": "varchar"
-					},
-					{
-						"name": "ALT",
-						"type": "varchar"
-					},
-					{
-						"name": "QUAL",
-						"type": "varchar"
-					},
-					{
-						"name": "FILTER",
-						"type": "varchar"
-					},
-					{
-						"name": "INFO",
-						"type": "varchar"
-					},
-					{
-						"name": "FORMAT",
-						"type": "varchar"
-					},
-					{
-						"name": "MUESTRA",
-						"type": "varchar"
-					},
-					{
-						"name": "VALOR",
-						"type": "varchar"
-					},
-					{
-						"name": "ORIGEN",
-						"type": "varchar"
-					},
-					{
-						"name": "FECHA_COPIA",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
-					},
-					{
-						"name": "RESULTADO",
-						"type": "nvarchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "Unificado"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_pruebapere')]"
-			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/pl_origin_landing_trusted')]",
@@ -393,6 +284,112 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_testing_parquet_sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "testing_historico",
+						"folderPath": "testing_etl",
+						"fileSystem": "landing"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_pruebapere')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_pruebapere",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "CHROM",
+						"type": "varchar"
+					},
+					{
+						"name": "POS",
+						"type": "varchar"
+					},
+					{
+						"name": "ID",
+						"type": "varchar"
+					},
+					{
+						"name": "REF",
+						"type": "varchar"
+					},
+					{
+						"name": "ALT",
+						"type": "varchar"
+					},
+					{
+						"name": "QUAL",
+						"type": "varchar"
+					},
+					{
+						"name": "FILTER",
+						"type": "varchar"
+					},
+					{
+						"name": "INFO",
+						"type": "varchar"
+					},
+					{
+						"name": "FORMAT",
+						"type": "varchar"
+					},
+					{
+						"name": "MUESTRA",
+						"type": "varchar"
+					},
+					{
+						"name": "VALOR",
+						"type": "varchar"
+					},
+					{
+						"name": "ORIGEN",
+						"type": "varchar"
+					},
+					{
+						"name": "FECHA_COPIA",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "RESULTADO",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Unificado"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_pruebapere')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_copy_testing')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -485,11 +482,17 @@
 					"recurrence": {
 						"frequency": "Week",
 						"interval": 1,
-						"startTime": "2025-04-13T20:55:00",
+						"startTime": "2025-04-13T05:00:00",
 						"timeZone": "E. South America Standard Time",
 						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								5
+							],
 							"weekDays": [
-								"Sunday"
+								"Monday"
 							]
 						}
 					}
